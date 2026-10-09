@@ -300,8 +300,12 @@ async function renderSprite(h){
     const r=await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(normalizePokemon(h.pokemon))}`);
     if(!r.ok) throw 0;
     const p=await r.json();
-    const url=p.sprites?.versions?.["generation-v"]?.["black-white"]?.animated?.front_default ||
-              p.sprites?.other?.["official-artwork"]?.front_default || p.sprites?.front_default;
+    const url=p.sprites?.versions?.["generation-v"]?.["black-white"]?.animated?.front_shiny ||
+              p.sprites?.other?.["official-artwork"]?.front_shiny ||
+              p.sprites?.front_shiny ||
+              p.sprites?.versions?.["generation-v"]?.["black-white"]?.animated?.front_default ||
+              p.sprites?.other?.["official-artwork"]?.front_default ||
+              p.sprites?.front_default;
     if(!url) throw 0;
     img.src=url; img.alt=h.pokemon; img.hidden=false; ph.hidden=true;
   }catch(e){}
