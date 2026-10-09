@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#090b12">
+
+  <!-- iPhone / iPad Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Shiny Counter">
+  <link rel="apple-touch-icon" href="Shinyball2.png">
+
+  <title>Shiny Counter</title>
+
+  <style>
+    :root{
+      --bg:#090b12; --panel:#111522; --panel2:#171c2b; --text:#f6f7fb;
+      --muted:#929bb0; --line:rgba(255,255,255,.08); --accent:#ffd84d;
+      --good:rgba(55,220,130,.22); --bad:rgba(255,80,95,.22);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+    body{min-height:100vh;min-height:100dvh;overflow-x:hidden}
+    button,input{font:inherit}
+    button{color:inherit}
+    .flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:100}
+    .flash.plus{background:var(--good);animation:flash .28s ease-out}
+    .flash.minus{background:var(--bad);animation:flash .28s ease-out}
+    @keyframes flash{0%{opacity:1}100%{opacity:0}}
+
+    .app{width:min(760px,100%);margin:auto;padding:max(18px,env(safe-area-inset-top)) 18px max(26px,env(safe-area-inset-bottom))}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .brand{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:800}
+    .icon-btn{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 13px;cursor:pointer}
+
+    .hunt-picker{display:flex;gap:10px;overflow:auto;padding:2px 0 14px;scrollbar-width:none}
+    .hunt-picker::-webkit-scrollbar{display:none}
+    .hunt-chip{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:9px 13px;
+      display:flex;align-items:center;gap:8px;cursor:pointer}
+    .hunt-chip.active{outline:2px solid rgba(255,216,77,.55)}
+    .hunt-chip img{width:30px;height:30px;object-fit:contain;image-rendering:auto}
+    .hunt-chip .mini{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel2)}
+    .add-chip{font-weight:800}
+
+    .hero{text-align:center;padding:10px 0 0}
+    .hunt-name{font-size:22px;font-weight:850;margin:4px 0 2px}
+    .pokemon-name{font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);min-height:18px}
+    .sprite-wrap{height:150px;display:grid;place-items:center;margin-top:2px}
+    #sprite{width:145px;height:145px;object-fit:contain;filter:drop-shadow(0 12px 20px rgba(0,0,0,.35))}
+    .sprite-placeholder{font-size:52px}
+    .count{font-size:clamp(64px,16vw,112px);line-height:.92;font-weight:900;letter-spacing:-.06em;margin-top:2px}
+    .enc-label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+    .previous{margin-top:8px;color:var(--muted);font-size:14px}
+    .previous strong{color:#d7dbea}
+
+    .balls{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:28px auto 10px;max-width:480px}
+    .ball-action{display:flex;flex-direction:column;align-items:center;gap:10px}
+    .ball-btn{width:126px;height:126px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;
+      filter:drop-shadow(0 13px 14px rgba(0,0,0,.34));-webkit-tap-highlight-color:transparent}
+    .ball-btn:active{transform:scale(.91)}
+    .ball{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;border:5px solid #07080b;background:#eee}
+    .ball::before{content:"";position:absolute;left:-5%;right:-5%;top:45%;height:12%;background:#07080b;z-index:3}
+    .ball::after{content:"";position:absolute;width:27%;height:27%;border-radius:50%;background:#f8f8f8;border:8px solid #07080b;
+      left:50%;top:51%;transform:translate(-50%,-50%);z-index:4;box-shadow:inset 0 0 0 3px #c8c8c8}
+    .ball-label{font-size:20px;font-weight:900}
+    .ball-sub{font-size:12px;color:var(--muted);margin-top:-7px}
+
+    /* Poké Ball: correction */
+    .poke{background:linear-gradient(#e74343 0 50%,#f1f1f1 50% 100%)}
+    .poke::after{background:#fafafa}
+
+    /* Quick Ball: main encounter */
+    .quick{background:
+      linear-gradient(90deg,transparent 0 37%,#ffd83d 37% 44%,transparent 44% 56%,#ffd83d 56% 63%,transparent 63%),
+      linear-gradient(#2089d7 0 50%,#e9eef4 50% 100%)}
+    .quick::after{background:#f8f8f8}
+    .quick .mark{position:absolute;width:54%;height:20%;background:#ffd83d;top:17%;left:23%;clip-path:polygon(0 0,36% 0,50% 45%,64% 0,100% 0,68% 100%,32% 100%);z-index:2}
+
+    .edit-steps{display:flex;justify-content:center;margin-top:6px}
+    .edit-steps button{border:0;background:transparent;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer}
+
+    .timer-card{margin:26px auto 0;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+      border-radius:24px;padding:20px;max-width:560px;text-align:center}
+    .timer-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .timer{font-variant-numeric:tabular-nums;font-size:42px;font-weight:850;letter-spacing:.03em;margin:7px 0 16px}
+    .timer-actions{display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
+    .small-ball-action{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .small-ball{width:66px;height:66px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent}
+    .small-ball:active{transform:scale(.91)}
+    .small-ball .ball{border-width:3px}
+    .small-ball .ball::before{height:11%}
+    .small-ball .ball::after{border-width:4px}
+    .small-ball-action span{font-size:11px;color:var(--muted)}
+
+    /* Timer Ball */
+    .timerball{background:
+      radial-gradient(circle at 27% 24%,#e54a48 0 7%,transparent 8%),
+      radial-gradient(circle at 73% 24%,#e54a48 0 7%,transparent 8%),
+      linear-gradient(90deg,#f4f4f4 0 22%,#d64242 22% 29%,#f4f4f4 29% 71%,#d64242 71% 78%,#f4f4f4 78%)}
+    /* Luxury Ball */
+    .luxury{background:
+      linear-gradient(90deg,transparent 0 43%,#e8c542 43% 49%,#c93838 49% 51%,#e8c542 51% 57%,transparent 57%),
+      linear-gradient(#222 0 50%,#111 50% 100%)}
+    .luxury::after{background:#222;border-color:#d9b73d;box-shadow:inset 0 0 0 3px #a72f32}
+    /* Premier Ball */
+    .premier{background:
+      linear-gradient(90deg,transparent 0 45%,#c9343c 45% 55%,transparent 55%),
+      linear-gradient(#f2f2f2 0 50%,#e6e6e6 50% 100%)}
+    .premier::before{background:#c9343c}
+    .premier::after{border-color:#c9343c;background:#f7f7f7}
+
+    .utility{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:22px auto 0;max-width:560px}
+    .utility button{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 13px;cursor:pointer;color:#dce0eb}
+
+    dialog{border:1px solid var(--line);border-radius:24px;background:#111522;color:var(--text);padding:0;width:min(92vw,440px)}
+    dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+    .modal{padding:22px}
+    .modal h2{margin:0 0 17px}
+    label{display:block;color:var(--muted);font-size:12px;margin:13px 0 6px}
+    input{width:100%;border:1px solid var(--line);background:#090c14;color:var(--text);border-radius:13px;padding:12px 13px;outline:none}
+    .modal-row{display:flex;gap:10px;margin-top:19px}
+    .modal-row button{flex:1;border:1px solid var(--line);border-radius:13px;padding:12px;background:var(--panel2);cursor:pointer}
+    .primary{background:#f3cf45!important;color:#111!important;border-color:#f3cf45!important;font-weight:800}
+    .danger{color:#ff7782!important}
+    .hint{font-size:11px;color:var(--muted);line-height:1.45;margin-top:8px}
+    @media(max-width:420px){
+      .app{padding-left:14px;padding-right:14px}
+      .sprite-wrap{height:128px} #sprite{width:125px;height:125px}
+      .ball-btn{width:112px;height:112px}.balls{gap:18px}
+      .timer{font-size:36px}
+    }
+  </style>
+</head>
+<body>
+<div id="flash" class="flash"></div>
+
+<main class="app">
+  <header>
+    <div class="brand">✦ Shiny Counter</div>
+    <button class="icon-btn" id="editHuntBtn">Edit Hunt</button>
+  </header>
+
+  <div class="hunt-picker" id="huntPicker"></div>
+
+  <section class="hero">
+    <div class="hunt-name" id="huntName">My Hunt</div>
+    <div class="pokemon-name" id="pokemonName"></div>
+    <div class="sprite-wrap">
+      <img id="sprite" alt="" hidden>
+      <div class="sprite-placeholder" id="spritePlaceholder">✦</div>
+    </div>
+
+    <div class="count" id="count">0</div>
+    <div class="enc-label">Encounters</div>
+    <div class="previous">Previous <strong id="previous">0</strong></div>
+
+    <div class="balls">
+      <div class="ball-action">
+        <button class="ball-btn" id="minusBtn" aria-label="Subtract encounters">
+          <div class="ball poke"></div>
+        </button>
+        <div class="ball-label" id="minusLabel">−1</div>
+        <div class="ball-sub">Correction</div>
+      </div>
+
+      <div class="ball-action">
+        <button class="ball-btn" id="plusBtn" aria-label="Add encounters">
+          <div class="ball quick"><i class="mark"></i></div>
+        </button>
+        <div class="ball-label" id="plusLabel">+1</div>
+        <div class="ball-sub">Encounter</div>
+      </div>
+    </div>
+
+    <div class="edit-steps"><button id="editStepsBtn">Change button values</button></div>
+  </section>
+
+  <section class="timer-card">
+    <div class="timer-title">Hunting Session</div>
+    <div class="timer" id="timer">00:00:00</div>
+    <div class="timer-actions">
+      <div class="small-ball-action">
+        <button class="small-ball" id="startTimer" aria-label="Start timer"><div class="ball timerball"></div></button>
+        <span>Timer Ball · Start</span>
+      </div>
+      <div class="small-ball-action">
+        <button class="small-ball" id="pauseTimer" aria-label="Pause timer"><div class="ball luxury"></div></button>
+        <span>Luxury Ball · Pause</span>
+      </div>
+      <div class="small-ball-action">
+        <button class="small-ball" id="newHuntBtn" aria-label="New hunt"><div class="ball premier"></div></button>
+        <span>Premier Ball · New Hunt</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="utility">
+    <button id="resetTimer">Reset timer</button>
+    <button id="exportBtn">Export backup</button>
+    <button id="importBtn">Import backup</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </div>
+</main>
+
+<dialog id="huntDialog">
+  <form method="dialog" class="modal" id="huntForm">
+    <h2 id="dialogTitle">New Hunt</h2>
+    <label>Hunt name</label>
+    <input id="nameInput" placeholder="e.g. Shiny Beldum" required>
+    <label>Pokémon</label>
+    <input id="pokemonInput" placeholder="e.g. Beldum, Rayquaza, Eevee">
+    <div class="hint">The app loads the Pokémon sprite from PokéAPI when internet is available. The counter itself works without the sprite.</div>
+    <label>Starting encounters</label>
+    <input id="startInput" type="number" min="0" step="1" value="0">
+    <div class="modal-row">
+      <button value="cancel">Cancel</button>
+      <button class="primary" id="saveHuntBtn" value="default">Save</button>
+    </div>
+    <div class="modal-row" id="deleteRow" hidden>
+      <button type="button" class="danger" id="deleteHuntBtn">Delete this hunt</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="stepsDialog">
+  <form method="dialog" class="modal" id="stepsForm">
+    <h2>Button Values</h2>
+    <label>Quick Ball / add value</label>
+    <input id="plusInput" type="number" min="1" step="1" value="1">
+    <label>Poké Ball / subtract value</label>
+    <input id="minusInput" type="number" min="1" step="1" value="1">
+    <div class="modal-row">
+      <button value="cancel">Cancel</button>
+      <button class="primary" id="saveStepsBtn" value="default">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const STORAGE_KEY = "shinyCounterBallUI_v1";
+const $ = s => document.querySelector(s);
+let timerTicker = null;
+let editing = false;
+
+function id(){ return (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random()); }
+function freshHunt(){
+  return {id:id(), name:"My First Hunt", pokemon:"", count:0, previous:0, plus:1, minus:1,
+          elapsed:0, timerStarted:null, timerRunning:false};
+}
+let state = load();
+function load(){
+  try{
+    const x=JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if(x && Array.isArray(x.hunts) && x.hunts.length) return x;
+  }catch(e){}
+  const h=freshHunt(); return {activeId:h.id,hunts:[h]};
+}
+function save(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
+function active(){ return state.hunts.find(h=>h.id===state.activeId) || state.hunts[0]; }
+function normalizePokemon(s){ return s.trim().toLowerCase().replace(/[.'’]/g,"").replace(/\s+/g,"-"); }
+
+function render(){
+  const h=active(); state.activeId=h.id;
+  $("#huntName").textContent=h.name || "Untitled Hunt";
+  $("#pokemonName").textContent=h.pokemon || "";
+  $("#count").textContent=h.count.toLocaleString();
+  $("#previous").textContent=h.previous.toLocaleString();
+  $("#plusLabel").textContent="+"+h.plus;
+  $("#minusLabel").textContent="−"+h.minus;
+  renderPicker();
+  renderSprite(h);
+  renderTimer();
+  save();
+}
+function renderPicker(){
+  const box=$("#huntPicker"); box.innerHTML="";
+  state.hunts.forEach(h=>{
+    const b=document.createElement("button"); b.className="hunt-chip"+(h.id===state.activeId?" active":"");
+    const mini=document.createElement("span"); mini.className="mini"; mini.textContent="✦";
+    if(h.pokemon){
+      const im=document.createElement("img");
+      im.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${normalizePokemon(h.pokemon)}.png`;
+      im.onerror=()=>{im.remove(); b.prepend(mini)};
+      b.append(im);
+    }else b.append(mini);
+    const t=document.createElement("span"); t.textContent=h.name; b.append(t);
+    b.onclick=()=>{state.activeId=h.id;render()};
+    box.append(b);
+  });
+  const add=document.createElement("button"); add.className="hunt-chip add-chip"; add.textContent="+ New";
+  add.onclick=()=>openHunt(false); box.append(add);
+}
+async function renderSprite(h){
+  const img=$("#sprite"), ph=$("#spritePlaceholder");
+  img.hidden=true; ph.hidden=false;
+  if(!h.pokemon) return;
+  try{
+    const r=await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(normalizePokemon(h.pokemon))}`);
+    if(!r.ok) throw 0;
+    const p=await r.json();
+    const url=p.sprites?.versions?.["generation-v"]?.["black-white"]?.animated?.front_default ||
+              p.sprites?.other?.["official-artwork"]?.front_default || p.sprites?.front_default;
+    if(!url) throw 0;
+    img.src=url; img.alt=h.pokemon; img.hidden=false; ph.hidden=true;
+  }catch(e){}
+}
+function flash(kind){
+  const f=$("#flash"); f.className="flash"; void f.offsetWidth; f.classList.add(kind);
+  if(navigator.vibrate) navigator.vibrate(18);
+}
+function changeCount(delta,kind){
+  const h=active(); h.previous=h.count; h.count=Math.max(0,h.count+delta);
+  flash(kind); render();
+}
+$("#plusBtn").onclick=()=>changeCount(active().plus,"plus");
+$("#minusBtn").onclick=()=>changeCount(-active().minus,"minus");
+
+function elapsedNow(h){
+  return h.elapsed + (h.timerRunning && h.timerStarted ? Date.now()-h.timerStarted : 0);
+}
+function fmt(ms){
+  const s=Math.floor(ms/1000), hh=Math.floor(s/3600), mm=Math.floor((s%3600)/60), ss=s%60;
+  return [hh,mm,ss].map(v=>String(v).padStart(2,"0")).join(":");
+}
+function renderTimer(){ $("#timer").textContent=fmt(elapsedNow(active())); }
+function ensureTicker(){
+  clearInterval(timerTicker);
+  timerTicker=setInterval(()=>{ if(active().timerRunning) renderTimer(); },250);
+}
+$("#startTimer").onclick=()=>{
+  const h=active(); if(!h.timerRunning){h.timerRunning=true;h.timerStarted=Date.now();save();renderTimer();}
+};
+$("#pauseTimer").onclick=()=>{
+  const h=active(); if(h.timerRunning){h.elapsed=elapsedNow(h);h.timerRunning=false;h.timerStarted=null;save();renderTimer();}
+};
+$("#resetTimer").onclick=()=>{
+  if(confirm("Reset this hunt's timer to 00:00:00?")){
+    const h=active();h.elapsed=0;h.timerStarted=h.timerRunning?Date.now():null;save();renderTimer();
+  }
+};
+
+function openHunt(isEdit){
+  editing=isEdit; const h=active();
+  $("#dialogTitle").textContent=isEdit?"Edit Hunt":"New Hunt";
+  $("#nameInput").value=isEdit?h.name:"";
+  $("#pokemonInput").value=isEdit?h.pokemon:"";
+  $("#startInput").value=isEdit?h.count:0;
+  $("#deleteRow").hidden=!isEdit || state.hunts.length===1;
+  $("#huntDialog").showModal();
+}
+$("#newHuntBtn").onclick=()=>openHunt(false);
+$("#editHuntBtn").onclick=()=>openHunt(true);
+$("#saveHuntBtn").onclick=(e)=>{
+  e.preventDefault();
+  const name=$("#nameInput").value.trim(); if(!name){$("#nameInput").focus();return;}
+  const pokemon=$("#pokemonInput").value.trim();
+  const n=Math.max(0,parseInt($("#startInput").value||0));
+  if(editing){
+    const h=active(); h.name=name;h.pokemon=pokemon;
+    if(n!==h.count){h.previous=h.count;h.count=n;}
+  }else{
+    const h={id:id(),name,pokemon,count:n,previous:n,plus:1,minus:1,elapsed:0,timerStarted:null,timerRunning:false};
+    state.hunts.push(h);state.activeId=h.id;
+  }
+  $("#huntDialog").close();render();
+};
+$("#deleteHuntBtn").onclick=()=>{
+  if(state.hunts.length<2)return;
+  if(confirm("Delete this hunt?")){
+    const target=active().id;state.hunts=state.hunts.filter(h=>h.id!==target);state.activeId=state.hunts[0].id;
+    $("#huntDialog").close();render();
+  }
+};
+
+$("#editStepsBtn").onclick=()=>{
+  $("#plusInput").value=active().plus;$("#minusInput").value=active().minus;$("#stepsDialog").showModal();
+};
+$("#saveStepsBtn").onclick=(e)=>{
+  e.preventDefault();const h=active();
+  h.plus=Math.max(1,parseInt($("#plusInput").value||1));
+  h.minus=Math.max(1,parseInt($("#minusInput").value||1));
+  $("#stepsDialog").close();render();
+};
+
+$("#exportBtn").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="shiny-counter-backup.json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$("#importBtn").onclick=()=>$("#importFile").click();
+$("#importFile").onchange=async e=>{
+  const file=e.target.files[0]; if(!file)return;
+  try{
+    const x=JSON.parse(await file.text());
+    if(!x.hunts || !Array.isArray(x.hunts) || !x.hunts.length) throw 0;
+    if(confirm("Replace your current counters with this backup?")){state=x;save();render();}
+  }catch(err){alert("That backup file could not be read.");}
+  e.target.value="";
+};
+
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) renderTimer(); });
+ensureTicker(); render();
+</script>
+</body>
+</html>
