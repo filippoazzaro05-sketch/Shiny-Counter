@@ -1,411 +1,441 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#090b12">
-
-  <!-- iPhone / iPad Home Screen -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Shiny Counter">
-  <link rel="apple-touch-icon" href="Shinyball2.png">
-
-  <title>Shiny Counter</title>
-
-  <style>
-    :root{
-      --bg:#090b12; --panel:#111522; --panel2:#171c2b; --text:#f6f7fb;
-      --muted:#929bb0; --line:rgba(255,255,255,.08); --accent:#ffd84d;
-      --good:rgba(55,220,130,.22); --bad:rgba(255,80,95,.22);
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
-    body{min-height:100vh;min-height:100dvh;overflow-x:hidden}
-    button,input{font:inherit}
-    button{color:inherit}
-    .flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:100}
-    .flash.plus{background:var(--good);animation:flash .28s ease-out}
-    .flash.minus{background:var(--bad);animation:flash .28s ease-out}
-    @keyframes flash{0%{opacity:1}100%{opacity:0}}
-
-    .app{width:min(760px,100%);margin:auto;padding:max(18px,env(safe-area-inset-top)) 18px max(26px,env(safe-area-inset-bottom))}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .brand{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:800}
-    .icon-btn{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 13px;cursor:pointer}
-
-    .hunt-picker{display:flex;gap:10px;overflow:auto;padding:2px 0 14px;scrollbar-width:none}
-    .hunt-picker::-webkit-scrollbar{display:none}
-    .hunt-chip{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:9px 13px;
-      display:flex;align-items:center;gap:8px;cursor:pointer}
-    .hunt-chip.active{outline:2px solid rgba(255,216,77,.55)}
-    .hunt-chip img{width:30px;height:30px;object-fit:contain;image-rendering:auto}
-    .hunt-chip .mini{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel2)}
-    .add-chip{font-weight:800}
-
-    .hero{text-align:center;padding:10px 0 0}
-    .hunt-name{font-size:22px;font-weight:850;margin:4px 0 2px}
-    .pokemon-name{font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);min-height:18px}
-    .sprite-wrap{height:150px;display:grid;place-items:center;margin-top:2px}
-    #sprite{width:145px;height:145px;object-fit:contain;filter:drop-shadow(0 12px 20px rgba(0,0,0,.35))}
-    .sprite-placeholder{font-size:52px}
-    .count{font-size:clamp(64px,16vw,112px);line-height:.92;font-weight:900;letter-spacing:-.06em;margin-top:2px}
-    .enc-label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:10px}
-    .previous{margin-top:8px;color:var(--muted);font-size:14px}
-    .previous strong{color:#d7dbea}
-
-    .balls{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:28px auto 10px;max-width:480px}
-    .ball-action{display:flex;flex-direction:column;align-items:center;gap:10px}
-    .ball-btn{width:126px;height:126px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;
-      filter:drop-shadow(0 13px 14px rgba(0,0,0,.34));-webkit-tap-highlight-color:transparent}
-    .ball-btn:active{transform:scale(.91)}
-    .ball{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;border:5px solid #07080b;background:#eee}
-    .ball::before{content:"";position:absolute;left:-5%;right:-5%;top:45%;height:12%;background:#07080b;z-index:3}
-    .ball::after{content:"";position:absolute;width:27%;height:27%;border-radius:50%;background:#f8f8f8;border:8px solid #07080b;
-      left:50%;top:51%;transform:translate(-50%,-50%);z-index:4;box-shadow:inset 0 0 0 3px #c8c8c8}
-    .ball-label{font-size:20px;font-weight:900}
-    .ball-sub{font-size:12px;color:var(--muted);margin-top:-7px}
-
-    /* Poké Ball: correction */
-    .poke{background:linear-gradient(#e74343 0 50%,#f1f1f1 50% 100%)}
-    .poke::after{background:#fafafa}
-
-    /* Quick Ball: main encounter */
-    .quick{background:
-      linear-gradient(90deg,transparent 0 37%,#ffd83d 37% 44%,transparent 44% 56%,#ffd83d 56% 63%,transparent 63%),
-      linear-gradient(#2089d7 0 50%,#e9eef4 50% 100%)}
-    .quick::after{background:#f8f8f8}
-    .quick .mark{position:absolute;width:54%;height:20%;background:#ffd83d;top:17%;left:23%;clip-path:polygon(0 0,36% 0,50% 45%,64% 0,100% 0,68% 100%,32% 100%);z-index:2}
-
-    .edit-steps{display:flex;justify-content:center;margin-top:6px}
-    .edit-steps button{border:0;background:transparent;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer}
-
-    .timer-card{margin:26px auto 0;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
-      border-radius:24px;padding:20px;max-width:560px;text-align:center}
-    .timer-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-    .timer{font-variant-numeric:tabular-nums;font-size:42px;font-weight:850;letter-spacing:.03em;margin:7px 0 16px}
-    .timer-actions{display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
-    .small-ball-action{display:flex;flex-direction:column;align-items:center;gap:6px}
-    .small-ball{width:66px;height:66px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent}
-    .small-ball:active{transform:scale(.91)}
-    .small-ball .ball{border-width:3px}
-    .small-ball .ball::before{height:11%}
-    .small-ball .ball::after{border-width:4px}
-    .small-ball-action span{font-size:11px;color:var(--muted)}
-
-    /* Timer Ball */
-    .timerball{background:
-      radial-gradient(circle at 27% 24%,#e54a48 0 7%,transparent 8%),
-      radial-gradient(circle at 73% 24%,#e54a48 0 7%,transparent 8%),
-      linear-gradient(90deg,#f4f4f4 0 22%,#d64242 22% 29%,#f4f4f4 29% 71%,#d64242 71% 78%,#f4f4f4 78%)}
-    /* Luxury Ball */
-    .luxury{background:
-      linear-gradient(90deg,transparent 0 43%,#e8c542 43% 49%,#c93838 49% 51%,#e8c542 51% 57%,transparent 57%),
-      linear-gradient(#222 0 50%,#111 50% 100%)}
-    .luxury::after{background:#222;border-color:#d9b73d;box-shadow:inset 0 0 0 3px #a72f32}
-    /* Premier Ball */
-    .premier{background:
-      linear-gradient(90deg,transparent 0 45%,#c9343c 45% 55%,transparent 55%),
-      linear-gradient(#f2f2f2 0 50%,#e6e6e6 50% 100%)}
-    .premier::before{background:#c9343c}
-    .premier::after{border-color:#c9343c;background:#f7f7f7}
-
-    .utility{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:22px auto 0;max-width:560px}
-    .utility button{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 13px;cursor:pointer;color:#dce0eb}
-
-    dialog{border:1px solid var(--line);border-radius:24px;background:#111522;color:var(--text);padding:0;width:min(92vw,440px)}
-    dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
-    .modal{padding:22px}
-    .modal h2{margin:0 0 17px}
-    label{display:block;color:var(--muted);font-size:12px;margin:13px 0 6px}
-    input{width:100%;border:1px solid var(--line);background:#090c14;color:var(--text);border-radius:13px;padding:12px 13px;outline:none}
-    .modal-row{display:flex;gap:10px;margin-top:19px}
-    .modal-row button{flex:1;border:1px solid var(--line);border-radius:13px;padding:12px;background:var(--panel2);cursor:pointer}
-    .primary{background:#f3cf45!important;color:#111!important;border-color:#f3cf45!important;font-weight:800}
-    .danger{color:#ff7782!important}
-    .hint{font-size:11px;color:var(--muted);line-height:1.45;margin-top:8px}
-    @media(max-width:420px){
-      .app{padding-left:14px;padding-right:14px}
-      .sprite-wrap{height:128px} #sprite{width:125px;height:125px}
-      .ball-btn{width:112px;height:112px}.balls{gap:18px}
-      .timer{font-size:36px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e19">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shiny Counter">
+<link rel="apple-touch-icon" href="Shinyball2.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Shiny Counter 2.0</title>
+<style>
+:root{--bg:#090d18;--surface:#12192a;--surface2:#1b2539;--stroke:#2b3851;--ink:#f3f6ff;--dim:#9eacc6;--gold:#f9d45a;--cyan:#69c7f8;--green:#61dfaa;--red:#f8869b}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;color:var(--ink);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(ellipse 80% 22% at 50% 0%,#182644 0%,transparent 100%),var(--bg);min-height:100dvh}
+button,input,select{font:inherit}button{cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+button:disabled{opacity:.4;cursor:not-allowed}
+.app{max-width:820px;margin:auto;padding:max(env(safe-area-inset-top),17px) 16px max(env(safe-area-inset-bottom),30px)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-weight:900;letter-spacing:.16em;font-size:12px;color:var(--gold)}
+.toolbar{display:flex;gap:8px}
+.icon{border:1px solid var(--stroke);background:var(--surface);padding:10px 12px;border-radius:13px;font-weight:700}
+.hunts{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:20px 2px 16px}.hunts::-webkit-scrollbar{display:none}
+.hunt-tab{flex-shrink:0;border:1px solid var(--stroke);background:var(--surface);padding:10px 14px;border-radius:15px;font-size:13px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hunt-tab.selected{border-color:var(--gold);background:#29283b;color:#ffe9a0}
+.heading{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0}
+.heading h1{font-size:21px;margin:0;text-align:center;overflow-wrap:anywhere}
+.info{border:1px solid var(--stroke);background:var(--surface2);border-radius:50%;width:31px;height:31px;font-weight:900;color:var(--cyan)}
+.subtitle{text-align:center;font-size:11px;color:var(--dim);letter-spacing:.13em;text-transform:uppercase}
+.total{text-align:center;font-size:clamp(72px,15vw,118px);font-weight:950;line-height:1.12;letter-spacing:-.065em;margin:12px 0 0;font-variant-numeric:tabular-nums}
+.total-label{text-align:center;color:var(--dim);font-size:11px;font-weight:700;letter-spacing:.22em}
+.undo-wrap{text-align:center;margin:16px 0 22px}
+.undo{border:1px solid #4b4a53;background:#252535;padding:11px 20px;border-radius:13px;color:#ffdc8a;font-weight:750}
+.panel{border:1px solid var(--stroke);background:linear-gradient(150deg,#151d31,#101726);border-radius:22px;padding:17px;margin:16px 0}
+.panel h2{font-size:12px;letter-spacing:.15em;color:var(--dim);margin:0 0 13px}
+.recent{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.recent-card{background:#1b263a;border:1px solid #303e57;border-radius:13px;padding:9px;text-align:center;min-width:0}
+.recent-card img{width:40px;height:40px;object-fit:contain;display:block;margin:auto}
+.recent-card .name{font-size:12px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent-card .number{font-size:10px;color:var(--dim);margin-top:3px}
+.empty{color:var(--dim);font-size:13px;text-align:center;padding:12px}
+.row-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 10px}
+.row-heading h2{font-size:13px;letter-spacing:.14em;margin:0;color:var(--dim)}
+.pill{font-size:11px;color:var(--gold);border:1px solid #5d5132;background:#282538;padding:6px 9px;border-radius:20px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.mon{position:relative;background:linear-gradient(150deg,#1e2b43,#141c2d);border:1px solid #32405a;border-radius:21px;min-height:178px;padding:13px 8px 15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:transform .08s,background .12s;touch-action:manipulation}
+.mon:active,.mon.pressed{transform:scale(.965);background:#26486b;border-color:#6ec8f7}
+.mon img{width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 8px 8px #0007)}
+.mon .mon-name{font-size:14px;font-weight:850;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mon .mon-count{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+.mon .mon-rate{font-size:12px;color:var(--gold);font-weight:800}
+.mon .fallback{font-size:43px;height:80px;display:grid;place-items:center;color:var(--gold)}
+.add-mon{min-height:100px;border:1px dashed #4b617f;background:#121e32;border-radius:18px;font-size:15px;font-weight:800;color:var(--cyan)}
+.refresh{border:0;background:transparent;color:var(--cyan);font-size:12px;font-weight:750}
+.timer-line{font-size:38px;font-weight:850;text-align:center;font-variant-numeric:tabular-nums;margin:8px 0 15px}
+.timer-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.timer-controls button{padding:11px 17px;border:1px solid var(--stroke);background:var(--surface2);border-radius:13px;font-weight:800}
+.timer-controls .go{background:#194b44;border-color:#2c866d;color:#a6ffdf}
+.footer{color:var(--dim);font-size:11px;text-align:center;margin-top:20px;line-height:1.6}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0}
+.flash.go{animation:flash .3s ease-out;background:#49b4ef44}
+.flash.undoFlash{animation:flash .3s ease-out;background:#f7a35b44}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+dialog{border:1px solid #394a68;background:#121a2b;color:var(--ink);border-radius:22px;width:min(94vw,530px);max-height:85dvh;padding:0;box-shadow:0 22px 90px #000b}
+dialog::backdrop{background:#000a;backdrop-filter:blur(4px)}
+.dialog-body{padding:23px;overflow-y:auto;max-height:85dvh}
+.dialog-body h2{margin:0 0 16px;font-size:20px}
+.field{display:block;margin:13px 0 5px;font-size:12px;color:var(--dim)}
+input:not([type=checkbox]),select{width:100%;background:#0a1221;color:var(--ink);border:1px solid #384a66;border-radius:12px;padding:12px}
+input[type=checkbox]{accent-color:var(--gold);width:18px;height:18px;vertical-align:middle}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:19px}
+.actions button,.action{border:1px solid var(--stroke);background:#202d43;border-radius:12px;padding:11px 14px;font-weight:800}
+.actions .primary,.primary{background:var(--gold)!important;color:#1b1920!important;border-color:var(--gold)!important}
+.danger{color:var(--red)!important}
+.help{font-size:12px;color:var(--dim);line-height:1.5;margin:8px 0}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat{background:#1c273c;border:1px solid var(--stroke);padding:12px;border-radius:12px}
+.stat small{color:var(--dim);display:block;font-size:11px}.stat strong{font-size:17px;display:block;margin-top:5px;overflow-wrap:anywhere}
+.bar-item{margin:13px 0}.bar-head{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:5px}
+.bar{height:9px;border-radius:9px;background:#2b3950;overflow:hidden}.bar i{height:100%;background:linear-gradient(90deg,#53a4ed,#ffe06b);display:block;border-radius:9px}
+.spark{width:100%;height:145px;background:#101a2b;border:1px solid var(--stroke);border-radius:13px}
+.edit-species{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--stroke);padding:9px 0}
+.edit-species span{flex:1;font-size:12px;overflow-wrap:anywhere}.edit-species input{max-width:95px}
+details{margin:14px 0}summary{cursor:pointer;font-weight:800;color:var(--cyan)}
+#suggestions{max-height:165px;overflow:auto;margin-top:6px}
+.suggestion{display:block;width:100%;text-align:left;padding:9px;background:#1e2b40;border:1px solid #33435b;border-radius:8px;margin:3px 0}
+@media(min-width:620px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.mon{min-height:190px}}
+@media(max-width:350px){.mon{min-height:160px}.mon img{width:65px;height:65px}.recent{gap:5px}.recent-card{padding:6px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition:none!important}}
+</style>
 </head>
 <body>
 <div id="flash" class="flash"></div>
-
 <main class="app">
-  <header>
-    <div class="brand">✦ Shiny Counter</div>
-    <button class="icon-btn" id="editHuntBtn">Edit Hunt</button>
-  </header>
-
-  <div class="hunt-picker" id="huntPicker"></div>
-
-  <section class="hero">
-    <div class="hunt-name" id="huntName">My Hunt</div>
-    <div class="pokemon-name" id="pokemonName"></div>
-    <div class="sprite-wrap">
-      <img id="sprite" alt="" hidden>
-      <div class="sprite-placeholder" id="spritePlaceholder">✦</div>
-    </div>
-
-    <div class="count" id="count">0</div>
-    <div class="enc-label">Encounters</div>
-    <div class="previous">Previous <strong id="previous">0</strong></div>
-
-    <div class="balls">
-      <div class="ball-action">
-        <button class="ball-btn" id="minusBtn" aria-label="Subtract encounters">
-          <div class="ball poke"></div>
-        </button>
-        <div class="ball-label" id="minusLabel">−1</div>
-        <div class="ball-sub">Correction</div>
-      </div>
-
-      <div class="ball-action">
-        <button class="ball-btn" id="plusBtn" aria-label="Add encounters">
-          <div class="ball quick"><i class="mark"></i></div>
-        </button>
-        <div class="ball-label" id="plusLabel">+1</div>
-        <div class="ball-sub">Encounter</div>
-      </div>
-    </div>
-
-    <div class="edit-steps"><button id="editStepsBtn">Change button values</button></div>
-  </section>
-
-  <section class="timer-card">
-    <div class="timer-title">Hunting Session</div>
-    <div class="timer" id="timer">00:00:00</div>
-    <div class="timer-actions">
-      <div class="small-ball-action">
-        <button class="small-ball" id="startTimer" aria-label="Start timer"><div class="ball timerball"></div></button>
-        <span>Timer Ball · Start</span>
-      </div>
-      <div class="small-ball-action">
-        <button class="small-ball" id="pauseTimer" aria-label="Pause timer"><div class="ball luxury"></div></button>
-        <span>Luxury Ball · Pause</span>
-      </div>
-      <div class="small-ball-action">
-        <button class="small-ball" id="newHuntBtn" aria-label="New hunt"><div class="ball premier"></div></button>
-        <span>Premier Ball · New Hunt</span>
-      </div>
-    </div>
-  </section>
-
-  <div class="utility">
-    <button id="resetTimer">Reset timer</button>
-    <button id="exportBtn">Export backup</button>
-    <button id="importBtn">Import backup</button>
-    <input type="file" id="importFile" accept=".json,application/json" hidden>
-  </div>
+<header class="top"><div class="brand">✦ SHINY COUNTER 2.0</div><div class="toolbar"><button class="icon" id="settingsBtn" aria-label="Settings">⚙</button><button class="icon" id="editBtn">Edit hunt</button></div></header>
+<nav class="hunts" id="hunts" aria-label="Hunts"></nav>
+<div class="heading"><h1 id="huntTitle">Dark Cave</h1><button class="info" id="infoBtn" aria-label="Hunt statistics">i</button></div>
+<div class="subtitle" id="huntSubtitle">ENCOUNTER TRACKER</div>
+<div class="total" id="total">0</div><div class="total-label">TOTAL ENCOUNTERS</div>
+<div class="undo-wrap"><button class="undo" id="undoBtn">↶ Undo last encounter</button></div>
+<section class="panel"><h2>RECENT ENCOUNTERS</h2><div class="recent" id="recent"></div></section>
+<div class="row-heading"><h2>ENCOUNTER POKÉMON <span id="speciesCount"></span></h2><button class="refresh" id="refreshBtn">↻ Refresh rates</button></div>
+<div class="grid" id="grid"></div>
+<div class="row-heading"><span class="pill" id="ratesBadge">Rates updated at 0</span></div>
+<section class="panel"><h2>HUNT TIMER</h2><div class="timer-line" id="timer">00:00:00</div><div class="timer-controls"><button class="go" id="startTimer">▶ Start</button><button id="pauseTimer">Ⅱ Pause</button><button id="resetTimer">↺ Reset</button></div></section>
+<div class="footer">Tap a shiny Pokémon to record one encounter. Saved automatically on this device.<br>Back up your hunts before clearing browser data or switching devices.</div>
 </main>
 
-<dialog id="huntDialog">
-  <form method="dialog" class="modal" id="huntForm">
-    <h2 id="dialogTitle">New Hunt</h2>
-    <label>Hunt name</label>
-    <input id="nameInput" placeholder="e.g. Shiny Beldum" required>
-    <label>Pokémon</label>
-    <input id="pokemonInput" placeholder="e.g. Beldum, Rayquaza, Eevee">
-    <div class="hint">The app loads the Pokémon sprite from PokéAPI when internet is available. The counter itself works without the sprite.</div>
-    <label>Starting encounters</label>
-    <input id="startInput" type="number" min="0" step="1" value="0">
-    <div class="modal-row">
-      <button value="cancel">Cancel</button>
-      <button class="primary" id="saveHuntBtn" value="default">Save</button>
-    </div>
-    <div class="modal-row" id="deleteRow" hidden>
-      <button type="button" class="danger" id="deleteHuntBtn">Delete this hunt</button>
-    </div>
-  </form>
-</dialog>
+<dialog id="huntDialog"><form class="dialog-body" id="huntForm">
+<h2 id="huntDialogTitle">New hunt</h2>
+<label class="field" for="huntName">Hunt / area name</label><input id="huntName" required maxlength="70" placeholder="Dark Cave — HGSS">
+<label class="field" for="huntGame">Game / notes (optional)</label><input id="huntGame" maxlength="90" placeholder="HeartGold randomizer">
+<label class="field" for="huntStarting">Starting total encounters</label><input id="huntStarting" type="number" min="0" max="999999999" step="1" value="0">
+<p class="help">Imported starting encounters count as unassigned, so observed species rates remain accurate.</p>
+<div class="actions"><button type="button" data-close="huntDialog">Cancel</button><button class="primary" type="submit">Save hunt</button><button type="button" class="danger" id="deleteHunt" hidden>Delete</button></div>
+</form></dialog>
 
-<dialog id="stepsDialog">
-  <form method="dialog" class="modal" id="stepsForm">
-    <h2>Button Values</h2>
-    <label>Quick Ball / add value</label>
-    <input id="plusInput" type="number" min="1" step="1" value="1">
-    <label>Poké Ball / subtract value</label>
-    <input id="minusInput" type="number" min="1" step="1" value="1">
-    <div class="modal-row">
-      <button value="cancel">Cancel</button>
-      <button class="primary" id="saveStepsBtn" value="default">Save</button>
-    </div>
-  </form>
-</dialog>
+<dialog id="addDialog"><form class="dialog-body" id="addForm">
+<h2>Add encountered Pokémon</h2>
+<p class="help">Adding a Pokémon automatically counts the encounter you just had. Maximum 20 Pokémon per hunt.</p>
+<label class="field" for="pokemonQuery">Pokémon name (or form)</label><input id="pokemonQuery" required autocomplete="off" placeholder="Rayquaza, Primeape, giratina-origin...">
+<div id="suggestions"></div>
+<label class="field" for="formMode">Form handling</label>
+<select id="formMode"><option value="separate">Separate form (track this exact form)</option><option value="group">Group forms (track as one species)</option></select>
+<p class="help">Choose “Group forms” to combine encounters for alternate forms of a species. Separate forms get individual cards.</p>
+<div class="actions"><button type="button" data-close="addDialog">Cancel</button><button class="primary" type="submit" id="addConfirm">Add + record 1</button></div>
+</form></dialog>
+
+<dialog id="statsDialog"><div class="dialog-body">
+<h2 id="statsTitle">Hunt statistics</h2><div class="stat-grid" id="statsGrid"></div>
+<h3>Observed encounter distribution</h3><div id="bars"></div>
+<h3>Frequency trend</h3><p class="help">Percentage of encounters recorded for the most common species, sampled every 10 recorded encounters. Starting/unassigned encounters excluded.</p><svg class="spark" id="trend" viewBox="0 0 480 145" role="img" aria-label="Observed frequency over time"></svg>
+<h3>Encounter history</h3><p class="help">Only the latest three are shown on the main screen. The full recorded history is retained for Undo and trend data.</p><div id="fullHistory"></div>
+<div class="actions"><button type="button" data-close="statsDialog">Close</button></div>
+</div></dialog>
+
+<dialog id="settingsDialog"><div class="dialog-body">
+<h2>Settings & backups</h2>
+<label><input type="checkbox" id="haptics"> Attempt vibration / haptic feedback on encounter</label>
+<p class="help">Vibration works in some browsers, but standard vibration is generally unsupported on iPhone Safari and installed web apps. Visual flash and card press feedback always work.</p>
+<div class="actions"><button type="button" id="exportBtn">Export JSON backup</button><button type="button" id="importBtn">Import JSON backup</button><input id="importFile" type="file" accept=".json,application/json" hidden></div>
+<details><summary>Import previous Shiny Counter hunts</summary><p class="help">If an older version's data exists in this browser, copy its totals into separate hunts as unassigned encounters. Existing 2.0 hunts are not replaced.</p><button type="button" class="action" id="legacyBtn">Import old hunts</button></details>
+<div class="actions"><button type="button" data-close="settingsDialog">Done</button></div>
+</div></dialog>
+
+<dialog id="editSpeciesDialog"><div class="dialog-body">
+<h2>Edit Pokémon counts</h2><p class="help">Changes are recorded as manual adjustments and do not fabricate individual encounter history. Counts and totals remain consistent.</p>
+<div id="speciesEditors"></div>
+<div class="actions"><button type="button" data-close="editSpeciesDialog">Cancel</button><button type="button" class="primary" id="saveSpecies">Save changes</button></div>
+</div></dialog>
 
 <script>
-const STORAGE_KEY = "shinyCounterBallUI_v1";
-const $ = s => document.querySelector(s);
-let timerTicker = null;
-let editing = false;
-
-function id(){ return (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random()); }
-function freshHunt(){
-  return {id:id(), name:"My First Hunt", pokemon:"", count:0, previous:0, plus:1, minus:1,
-          elapsed:0, timerStarted:null, timerRunning:false};
+"use strict";
+const KEY="shiny-counter-v2-data", OLD_KEY="shinyCounterBallUI_v1";
+const $=id=>document.getElementById(id);
+const deep=x=>JSON.parse(JSON.stringify(x));
+const uid=()=>globalThis.crypto?.randomUUID?.() || Date.now().toString(36)+Math.random().toString(36).slice(2);
+const clampInt=(v,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.floor(Number(v))):fallback;
+const fmt=n=>clampInt(n).toLocaleString();
+const slug=s=>String(s).trim().toLowerCase().replace(/[.'’]/g,"").replace(/♀/g,"-f").replace(/♂/g,"-m").replace(/\s+/g,"-");
+const displayName=s=>String(s).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+const sprites={};let pokemonNames=[],selectedPokemon=null,editing=false,activePress=0;
+function newHunt(name="My First Hunt",game="",unassigned=0){
+ return {id:uid(),name,game,unassigned,mons:[],history:[],snapshots:[],rateSnapshot:null,
+ timer:{elapsed:0,started:null,running:false},created:Date.now()};
 }
-let state = load();
 function load(){
-  try{
-    const x=JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if(x && Array.isArray(x.hunts) && x.hunts.length) return x;
-  }catch(e){}
-  const h=freshHunt(); return {activeId:h.id,hunts:[h]};
+ try{const s=JSON.parse(localStorage.getItem(KEY));if(s?.hunts?.length && s.activeId)return s;}catch{}
+ const h=newHunt();return {version:2,activeId:h.id,hunts:[h],settings:{haptics:false}};
 }
-function save(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
-function active(){ return state.hunts.find(h=>h.id===state.activeId) || state.hunts[0]; }
-function normalizePokemon(s){ return s.trim().toLowerCase().replace(/[.'’]/g,"").replace(/\s+/g,"-"); }
-
+let state=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){alert("Device storage is full. Export a backup now.");}}
+function hunt(){return state.hunts.find(h=>h.id===state.activeId)||state.hunts[0]}
+function total(h){return h.unassigned+h.mons.reduce((a,m)=>a+m.count,0)}
+function assigned(h){return h.mons.reduce((a,m)=>a+m.count,0)}
+function timerMs(h){return h.timer.elapsed+(h.timer.running&&h.timer.started?Math.max(0,Date.now()-h.timer.started):0)}
+function duration(ms){let t=Math.floor(ms/1000);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(x=>String(x).padStart(2,"0")).join(":")}
+function percentage(c,t){return t?((c/t)*100).toFixed(1)+"%":"—"}
+function spriteUrl(mon){return mon.sprite||`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${mon.pokeId||1}.png`}
+function imgFor(mon,cls=""){const img=document.createElement("img");img.className=cls;img.alt="Shiny "+mon.name;img.loading="lazy";img.src=spriteUrl(mon);img.onerror=()=>{img.style.display="none";if(!img.nextSibling?.classList?.contains("fallback")){const f=document.createElement("span");f.className="fallback";f.textContent="✦";img.after(f)}};return img}
+function make(tag,cls,content){const e=document.createElement(tag);if(cls)e.className=cls;if(content!==undefined)e.textContent=content;return e}
+function rateMap(h){if(h.rateSnapshot)return h.rateSnapshot.values;const a=assigned(h);return Object.fromEntries(h.mons.map(m=>[m.id,a?m.count/a:0]))}
+function takeSnapshot(h,manual=false){
+ const a=assigned(h), values=Object.fromEntries(h.mons.map(m=>[m.id,a?m.count/a:0]));
+ h.rateSnapshot={at:total(h),assigned:a,values};
+ if(a && (a%10===0||manual))h.snapshots.push({at:a,values});
+}
+function flash(type="go"){const f=$("flash");f.className="flash";void f.offsetWidth;f.classList.add(type)}
+function feedback(){if(state.settings.haptics && navigator.vibrate)navigator.vibrate(25)}
+function record(monId){
+ const h=hunt(),m=h.mons.find(x=>x.id===monId);if(!m)return;
+ const before=total(h);m.count++;
+ h.history.push({id:uid(),monId,name:m.name,number:before+1,time:Date.now()});
+ if(assigned(h)%10===0)takeSnapshot(h);
+ save();flash();feedback();render();
+}
+function undo(){
+ const h=hunt(),last=h.history.pop();if(!last)return;
+ const m=h.mons.find(x=>x.id===last.monId);
+ if(m && m.count>0)m.count--;
+ if(h.rateSnapshot?.at>total(h))takeSnapshot(h,true);
+ h.snapshots=h.snapshots.filter(s=>s.at<=assigned(h));
+ save();flash("undoFlash");render();
+}
 function render(){
-  const h=active(); state.activeId=h.id;
-  $("#huntName").textContent=h.name || "Untitled Hunt";
-  $("#pokemonName").textContent=h.pokemon || "";
-  $("#count").textContent=h.count.toLocaleString();
-  $("#previous").textContent=h.previous.toLocaleString();
-  $("#plusLabel").textContent="+"+h.plus;
-  $("#minusLabel").textContent="−"+h.minus;
-  renderPicker();
-  renderSprite(h);
-  renderTimer();
-  save();
+ const h=hunt();
+ $("huntTitle").textContent=h.name;$("huntSubtitle").textContent=h.game||"ENCOUNTER TRACKER";
+ $("total").textContent=fmt(total(h));$("undoBtn").disabled=!h.history.length;
+ $("speciesCount").textContent=`(${h.mons.length}/20)`;
+ $("ratesBadge").textContent=`Rates updated at ${fmt(h.rateSnapshot?.at||0)} total`;
+ const nav=$("hunts");nav.replaceChildren();
+ for(const x of state.hunts){const b=make("button","hunt-tab"+(x.id===h.id?" selected":""),x.name);b.onclick=()=>{state.activeId=x.id;save();render()};nav.append(b)}
+ const addHunt=make("button","hunt-tab","+ New hunt");addHunt.onclick=()=>openHunt(false);nav.append(addHunt);
+ const recent=$("recent");recent.replaceChildren();
+ for(const ev of h.history.slice(-3).reverse()){
+   const mon=h.mons.find(x=>x.id===ev.monId),c=make("div","recent-card");
+   if(mon)c.append(imgFor(mon));else c.append(make("div","fallback","✦"));
+   c.append(make("div","name",ev.name),make("div","number","#"+fmt(ev.number)));recent.append(c);
+ }
+ if(!h.history.length)recent.append(make("div","empty","No encounters recorded yet."));
+ const grid=$("grid");grid.replaceChildren();
+ const rates=rateMap(h);
+ for(const m of h.mons){
+  const b=make("button","mon");b.setAttribute("aria-label",`Record ${m.name} encounter`);
+  b.append(imgFor(m),make("div","mon-name",m.name),make("div","mon-count",fmt(m.count)),make("div","mon-rate",percentage(rates[m.id]||0,1)));
+  b.onclick=()=>record(m.id);grid.append(b);
+ }
+ if(h.mons.length<20){const b=make("button","add-mon","+ Add Pokémon");b.onclick=openAdd;grid.append(b)}
+ renderTimer();
 }
-function renderPicker(){
-  const box=$("#huntPicker"); box.innerHTML="";
-  state.hunts.forEach(h=>{
-    const b=document.createElement("button"); b.className="hunt-chip"+(h.id===state.activeId?" active":"");
-    const mini=document.createElement("span"); mini.className="mini"; mini.textContent="✦";
-    if(h.pokemon){
-      const im=document.createElement("img");
-      im.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${normalizePokemon(h.pokemon)}.png`;
-      im.onerror=()=>{im.remove(); b.prepend(mini)};
-      b.append(im);
-    }else b.append(mini);
-    const t=document.createElement("span"); t.textContent=h.name; b.append(t);
-    b.onclick=()=>{state.activeId=h.id;render()};
-    box.append(b);
+function renderTimer(){
+ const h=hunt();$("timer").textContent=duration(timerMs(h));
+ $("startTimer").disabled=h.timer.running;$("pauseTimer").disabled=!h.timer.running;
+}
+function openHunt(edit){
+ editing=edit;const h=hunt();
+ $("huntDialogTitle").textContent=edit?"Edit hunt":"New hunt";
+ $("huntName").value=edit?h.name:"";$("huntGame").value=edit?h.game:"";
+ $("huntStarting").value=edit?total(h):0;
+ $("deleteHunt").hidden=!edit||state.hunts.length<=1;
+ $("huntDialog").showModal();
+}
+$("editBtn").onclick=()=>openHunt(true);
+$("huntForm").onsubmit=e=>{
+ e.preventDefault();const name=$("huntName").value.trim();if(!name)return;
+ const game=$("huntGame").value.trim(),start=clampInt($("huntStarting").value);
+ if(editing){
+  const h=hunt(),diff=start-total(h);
+  if(h.unassigned+diff<0){alert("The starting total cannot be smaller than the sum of recorded Pokémon counts. Use Edit Pokémon counts to correct those first.");return}
+  h.name=name;h.game=game;h.unassigned+=diff;
+ }else{const h=newHunt(name,game,start);state.hunts.push(h);state.activeId=h.id}
+ $("huntDialog").close();save();render();
+};
+$("deleteHunt").onclick=()=>{
+ if(state.hunts.length<2)return;
+ if(confirm("Permanently delete this hunt and its history?")){
+  state.hunts=state.hunts.filter(h=>h.id!==state.activeId);state.activeId=state.hunts[0].id;
+  $("huntDialog").close();save();render();
+ }
+};
+function openAdd(){
+ if(hunt().mons.length>=20)return;
+ selectedPokemon=null;$("pokemonQuery").value="";$("suggestions").replaceChildren();
+ $("formMode").value="separate";$("addDialog").showModal();$("pokemonQuery").focus();
+}
+function baseSpecies(p){
+ return p?.species?.name||slug(p?.name||"");
+}
+async function lookupPokemon(name){
+ const q=slug(name);
+ if(!q)throw Error("Enter a Pokémon name.");
+ const r=await fetch("https://pokeapi.co/api/v2/pokemon/"+encodeURIComponent(q));
+ if(!r.ok)throw Error("Pokémon not found. Try the English name or a specific form (e.g. giratina-origin).");
+ const p=await r.json();
+ return {id:p.id,slug:p.name,species:baseSpecies(p),
+  shiny:p.sprites?.versions?.["generation-v"]?.["black-white"]?.animated?.front_shiny ||
+        p.sprites?.other?.["official-artwork"]?.front_shiny ||
+        p.sprites?.front_shiny || "",
+  staticShiny:p.sprites?.other?.["official-artwork"]?.front_shiny || p.sprites?.front_shiny || ""};
+}
+let searchToken=0;
+$("pokemonQuery").addEventListener("input",()=>{
+ const q=slug($("pokemonQuery").value),token=++searchToken;
+ selectedPokemon=null;
+ setTimeout(()=>{
+  if(token!==searchToken)return;
+  const box=$("suggestions");box.replaceChildren();
+  if(q.length<2)return;
+  for(const name of pokemonNames.filter(n=>n.includes(q)).slice(0,7)){
+   const b=make("button","suggestion",displayName(name));b.type="button";
+   b.onclick=()=>{$("pokemonQuery").value=name;selectedPokemon=null;box.replaceChildren()};
+   box.append(b);
+  }
+ },120);
+});
+$("addForm").onsubmit=async e=>{
+ e.preventDefault();const btn=$("addConfirm");btn.disabled=true;btn.textContent="Finding shiny sprite…";
+ try{
+  const p=await lookupPokemon($("pokemonQuery").value);
+  const h=hunt(),group=$("formMode").value==="group",key=group?p.species:p.slug;
+  const existing=h.mons.find(m=>m.key===key);
+  if(existing){record(existing.id);$("addDialog").close();return}
+  if(h.mons.length>=20)throw Error("This hunt already has 20 Pokémon.");
+  const mon={id:uid(),key,name:displayName(key),count:0,pokeId:p.id,
+    sprite:p.shiny||p.staticShiny,formMode:group?"group":"separate",species:p.species};
+  h.mons.push(mon);
+  record(mon.id);$("addDialog").close();
+ }catch(err){alert(err.message||"Unable to look up Pokémon. An internet connection is needed to add new species.")}
+ finally{btn.disabled=false;btn.textContent="Add + record 1"}
+};
+$("undoBtn").onclick=undo;
+$("refreshBtn").onclick=()=>{takeSnapshot(hunt(),true);save();render()};
+$("startTimer").onclick=()=>{const t=hunt().timer;if(!t.running){t.running=true;t.started=Date.now();save();renderTimer()}};
+$("pauseTimer").onclick=()=>{const t=hunt().timer;if(t.running){t.elapsed=timerMs(hunt());t.started=null;t.running=false;save();renderTimer()}};
+$("resetTimer").onclick=()=>{if(confirm("Reset this hunt timer?")){const t=hunt().timer;t.elapsed=0;t.started=t.running?Date.now():null;save();renderTimer()}};
+setInterval(()=>{if(hunt().timer.running)renderTimer()},250);
+function openStats(){
+ const h=hunt(),a=assigned(h),t=timerMs(h),hour=t/3600000;
+ const ranked=[...h.mons].sort((x,y)=>y.count-x.count);
+ const data=[
+  ["Total encounters",fmt(total(h))],["Assigned encounters",fmt(a)],
+  ["Unassigned encounters",fmt(h.unassigned)],["Hunting time",duration(t)],
+  ["Encounters/hour",hour?(a/hour).toFixed(1):"—"],
+  ["Avg. seconds/encounter",a?(t/1000/a).toFixed(1)+"s":"—"],
+  ["Most common",ranked.length?ranked[0].name:"—"],
+  ["Rarest observed",ranked.length?ranked.filter(m=>m.count>0).at(-1)?.name||"—":"—"],
+  ["Species discovered",`${h.mons.length}/20`]
+ ];
+ $("statsTitle").textContent=h.name+" — Statistics";
+ const box=$("statsGrid");box.replaceChildren();
+ for(const [label,value] of data){const d=make("div","stat");d.append(make("small","",label),make("strong","",value));box.append(d)}
+ const bars=$("bars");bars.replaceChildren();
+ for(const m of ranked){
+  const wrap=make("div","bar-item"),top=make("div","bar-head"),bar=make("div","bar"),fill=make("i");
+  top.append(make("span","",m.name+" · "+fmt(m.count)),make("strong","",percentage(m.count,a)));
+  fill.style.width=(a?m.count/a*100:0)+"%";bar.append(fill);wrap.append(top,bar);bars.append(wrap);
+ }
+ if(!ranked.length)bars.append(make("p","help","Add Pokémon to see their observed frequencies."));
+ const svg=$("trend");svg.replaceChildren();svg.setAttribute("viewBox","0 0 480 145");
+ const leader=ranked[0],snaps=h.snapshots.filter(s=>s.at>0);
+ if(leader&&snaps.length){
+  const maxX=Math.max(10,...snaps.map(s=>s.at)),coords=snaps.map(s=>{
+   const val=s.values[leader.id]||0;
+   return [10+460*s.at/maxX,135-125*val];
   });
-  const add=document.createElement("button"); add.className="hunt-chip add-chip"; add.textContent="+ New";
-  add.onclick=()=>openHunt(false); box.append(add);
+  const line=document.createElementNS("http://www.w3.org/2000/svg","polyline");
+  line.setAttribute("points",coords.map(p=>p.join(",")).join(" "));
+  line.setAttribute("fill","none");line.setAttribute("stroke","#f9d45a");line.setAttribute("stroke-width","3");
+  svg.append(line);
+  const label=document.createElementNS("http://www.w3.org/2000/svg","text");
+  label.setAttribute("x","12");label.setAttribute("y","17");label.setAttribute("fill","#9eacc6");label.setAttribute("font-size","12");
+  label.textContent=leader.name;svg.append(label);
+ }else{
+  const label=document.createElementNS("http://www.w3.org/2000/svg","text");
+  label.setAttribute("x","18");label.setAttribute("y","75");label.setAttribute("fill","#9eacc6");label.setAttribute("font-size","14");
+  label.textContent="Trend appears after 10 recorded encounters";svg.append(label);
+ }
+ const hist=$("fullHistory");hist.replaceChildren();
+ for(const ev of h.history.slice(-100).reverse()){
+  const line=make("div","edit-species");line.append(make("span","",`#${fmt(ev.number)} · ${ev.name}`),
+  make("span","",new Date(ev.time).toLocaleString()));hist.append(line);
+ }
+ if(h.history.length>100)hist.append(make("p","help",`Showing the latest 100 of ${fmt(h.history.length)} recorded events.`));
+ if(!h.history.length)hist.append(make("p","help","No recorded encounters yet."));
+ $("statsDialog").showModal();
 }
-async function renderSprite(h){
-  const img=$("#sprite"), ph=$("#spritePlaceholder");
-  img.hidden=true; ph.hidden=false;
-  if(!h.pokemon) return;
-  try{
-    const r=await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(normalizePokemon(h.pokemon))}`);
-    if(!r.ok) throw 0;
-    const p=await r.json();
-    const url=p.sprites?.versions?.["generation-v"]?.["black-white"]?.animated?.front_shiny ||
-              p.sprites?.other?.["official-artwork"]?.front_shiny ||
-              p.sprites?.front_shiny ||
-              p.sprites?.versions?.["generation-v"]?.["black-white"]?.animated?.front_default ||
-              p.sprites?.other?.["official-artwork"]?.front_default ||
-              p.sprites?.front_default;
-    if(!url) throw 0;
-    img.src=url; img.alt=h.pokemon; img.hidden=false; ph.hidden=true;
-  }catch(e){}
-}
-function flash(kind){
-  const f=$("#flash"); f.className="flash"; void f.offsetWidth; f.classList.add(kind);
-  if(navigator.vibrate) navigator.vibrate(18);
-}
-function changeCount(delta,kind){
-  const h=active(); h.previous=h.count; h.count=Math.max(0,h.count+delta);
-  flash(kind); render();
-}
-$("#plusBtn").onclick=()=>changeCount(active().plus,"plus");
-$("#minusBtn").onclick=()=>changeCount(-active().minus,"minus");
-
-function elapsedNow(h){
-  return h.elapsed + (h.timerRunning && h.timerStarted ? Date.now()-h.timerStarted : 0);
-}
-function fmt(ms){
-  const s=Math.floor(ms/1000), hh=Math.floor(s/3600), mm=Math.floor((s%3600)/60), ss=s%60;
-  return [hh,mm,ss].map(v=>String(v).padStart(2,"0")).join(":");
-}
-function renderTimer(){ $("#timer").textContent=fmt(elapsedNow(active())); }
-function ensureTicker(){
-  clearInterval(timerTicker);
-  timerTicker=setInterval(()=>{ if(active().timerRunning) renderTimer(); },250);
-}
-$("#startTimer").onclick=()=>{
-  const h=active(); if(!h.timerRunning){h.timerRunning=true;h.timerStarted=Date.now();save();renderTimer();}
+$("infoBtn").onclick=openStats;
+$("settingsBtn").onclick=()=>{$("haptics").checked=!!state.settings.haptics;$("settingsDialog").showModal()};
+$("haptics").onchange=e=>{state.settings.haptics=e.target.checked;save()};
+$("exportBtn").onclick=()=>{
+ const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="shiny-counter-2-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
 };
-$("#pauseTimer").onclick=()=>{
-  const h=active(); if(h.timerRunning){h.elapsed=elapsedNow(h);h.timerRunning=false;h.timerStarted=null;save();renderTimer();}
-};
-$("#resetTimer").onclick=()=>{
-  if(confirm("Reset this hunt's timer to 00:00:00?")){
-    const h=active();h.elapsed=0;h.timerStarted=h.timerRunning?Date.now():null;save();renderTimer();
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+  const obj=JSON.parse(await file.text());
+  if(obj.version!==2||!Array.isArray(obj.hunts)||!obj.hunts.length||!obj.hunts.every(h=>Array.isArray(h.mons)&&Array.isArray(h.history)&&h.timer))throw Error("Not a valid Shiny Counter 2.0 backup.");
+  if(confirm("Replace all current hunts with the imported backup? Export a backup first if you want to keep your current hunts.")){
+   state=obj;save();render();$("settingsDialog").close();
   }
+ }catch(err){alert(err.message||"Unable to read backup")}e.target.value="";
 };
-
-function openHunt(isEdit){
-  editing=isEdit; const h=active();
-  $("#dialogTitle").textContent=isEdit?"Edit Hunt":"New Hunt";
-  $("#nameInput").value=isEdit?h.name:"";
-  $("#pokemonInput").value=isEdit?h.pokemon:"";
-  $("#startInput").value=isEdit?h.count:0;
-  $("#deleteRow").hidden=!isEdit || state.hunts.length===1;
-  $("#huntDialog").showModal();
+$("legacyBtn").onclick=()=>{
+ let old;try{old=JSON.parse(localStorage.getItem(OLD_KEY))}catch{}
+ if(!old?.hunts?.length){alert("No compatible older Shiny Counter data found on this device and browser.");return}
+ if(!confirm(`Import ${old.hunts.length} old hunt(s) as new hunts? Existing hunts will be preserved.`))return;
+ for(const x of old.hunts){
+  const h=newHunt((x.name||"Imported Hunt")+" (imported)",x.pokemon||"",clampInt(x.count));
+  h.timer.elapsed=clampInt(x.elapsed)+(x.timerRunning&&x.timerStarted?Math.max(0,Date.now()-x.timerStarted):0);
+  state.hunts.push(h);
+ }
+ save();render();$("settingsDialog").close();alert("Old hunt totals imported. Individual Pokémon counts are unassigned.");
+};
+function openSpeciesEditor(){
+ const box=$("speciesEditors");box.replaceChildren();
+ const h=hunt();
+ for(const m of h.mons){
+  const row=make("div","edit-species"),input=document.createElement("input");
+  input.type="number";input.min="0";input.max="999999999";input.step="1";input.value=m.count;input.dataset.mon=m.id;
+  row.append(make("span","",m.name),input);box.append(row);
+ }
+ if(!h.mons.length)box.append(make("p","help","No Pokémon have been added yet."));
+ $("editSpeciesDialog").showModal();
 }
-$("#newHuntBtn").onclick=()=>openHunt(false);
-$("#editHuntBtn").onclick=()=>openHunt(true);
-$("#saveHuntBtn").onclick=(e)=>{
-  e.preventDefault();
-  const name=$("#nameInput").value.trim(); if(!name){$("#nameInput").focus();return;}
-  const pokemon=$("#pokemonInput").value.trim();
-  const n=Math.max(0,parseInt($("#startInput").value||0));
-  if(editing){
-    const h=active(); h.name=name;h.pokemon=pokemon;
-    if(n!==h.count){h.previous=h.count;h.count=n;}
-  }else{
-    const h={id:id(),name,pokemon,count:n,previous:n,plus:1,minus:1,elapsed:0,timerStarted:null,timerRunning:false};
-    state.hunts.push(h);state.activeId=h.id;
-  }
-  $("#huntDialog").close();render();
+$("saveSpecies").onclick=()=>{
+ const h=hunt();
+ const changes=[...$("speciesEditors").querySelectorAll("input")].map(el=>({id:el.dataset.mon,value:clampInt(el.value)}));
+ for(const c of changes){const m=h.mons.find(x=>x.id===c.id);if(m)m.count=c.value}
+ // Counts edited manually: discard historical events that cannot be reconciled with edited totals.
+ // Keep recent events only while every Pokémon still has at least that many events.
+ const used={};h.history=h.history.filter(ev=>{
+  used[ev.monId]=(used[ev.monId]||0)+1;
+  return used[ev.monId] <= (h.mons.find(m=>m.id===ev.monId)?.count||0);
+ });
+ let n=h.unassigned;for(const ev of h.history){n++;ev.number=n}
+ h.snapshots=[];takeSnapshot(h,true);
+ save();render();$("editSpeciesDialog").close();
 };
-$("#deleteHuntBtn").onclick=()=>{
-  if(state.hunts.length<2)return;
-  if(confirm("Delete this hunt?")){
-    const target=active().id;state.hunts=state.hunts.filter(h=>h.id!==target);state.activeId=state.hunts[0].id;
-    $("#huntDialog").close();render();
-  }
-};
-
-$("#editStepsBtn").onclick=()=>{
-  $("#plusInput").value=active().plus;$("#minusInput").value=active().minus;$("#stepsDialog").showModal();
-};
-$("#saveStepsBtn").onclick=(e)=>{
-  e.preventDefault();const h=active();
-  h.plus=Math.max(1,parseInt($("#plusInput").value||1));
-  h.minus=Math.max(1,parseInt($("#minusInput").value||1));
-  $("#stepsDialog").close();render();
-};
-
-$("#exportBtn").onclick=()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="shiny-counter-backup.json";a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-};
-$("#importBtn").onclick=()=>$("#importFile").click();
-$("#importFile").onchange=async e=>{
-  const file=e.target.files[0]; if(!file)return;
-  try{
-    const x=JSON.parse(await file.text());
-    if(!x.hunts || !Array.isArray(x.hunts) || !x.hunts.length) throw 0;
-    if(confirm("Replace your current counters with this backup?")){state=x;save();render();}
-  }catch(err){alert("That backup file could not be read.");}
-  e.target.value="";
-};
-
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden) renderTimer(); });
-ensureTicker(); render();
+$("editBtn").addEventListener("contextmenu",e=>e.preventDefault());
+$("editBtn").addEventListener("dblclick",e=>{e.preventDefault();openSpeciesEditor()});
+const extra=make("button","icon","Edit Pokémon counts");
+extra.onclick=openSpeciesEditor;
+$("settingsDialog").querySelector(".actions").before(extra);
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).close());
+document.querySelectorAll("dialog").forEach(d=>d.addEventListener("click",e=>{if(e.target===d)d.close()}));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)renderTimer()});
+async function loadNames(){
+ try{const r=await fetch("https://pokeapi.co/api/v2/pokemon?limit=3000");if(r.ok){const j=await r.json();pokemonNames=j.results.map(x=>x.name)}}catch{}
+}
+loadNames();render();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+ navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
 </script>
 </body>
 </html>
